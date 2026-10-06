@@ -2,7 +2,7 @@
 ARG FEDORA_VERSION=44
 ARG ROCM_VERSION=10.0.0
 ARG REPO=https://github.com/ggml-org/llama.cpp.git
-ARG TAG=v0.5.0
+ARG TAG=v0.6.0
 ARG ROCM_PIP_INDEX=https://stable.repo.amd.com/rocm/whl-next/
 
 # --- BUILDER STAGE ---
