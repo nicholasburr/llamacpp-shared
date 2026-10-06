@@ -1,4 +1,4 @@
-# fedora-llama-shared
+# llamacpp-shared
 
 Single source of truth for the files shared across the Fedora + llama.cpp
 (ROCm / gfx1151) project repos:
@@ -14,11 +14,11 @@ see `../submodule-poc/README.md` for the full pattern and a working example.
 ## Consumer-side wiring (per project)
 
 ```sh
-git submodule add git@github.com:nicholasburr/fedora-llama-shared.git fedora-shared
-ln -s fedora-shared/Containerfile Containerfile
+git submodule add git@github.com:nicholasburr/llamacpp-shared.git llamacpp-shared
+ln -s llamacpp-shared/Containerfile Containerfile
 mkdir -p scripts
-ln -s ../fedora-shared/scripts/fedora-setup.sh scripts/fedora-setup.sh
-git add .gitmodules fedora-shared Containerfile scripts/fedora-setup.sh
+ln -s ../llamacpp-shared/scripts/fedora-setup.sh scripts/fedora-setup.sh
+git add .gitmodules llamacpp-shared Containerfile scripts/fedora-setup.sh
 git commit -m 'Share Containerfile + fedora-setup.sh via submodule'
 ```
 
@@ -26,9 +26,9 @@ git commit -m 'Share Containerfile + fedora-setup.sh via submodule'
 
 ```sh
 cd <consumer-project>
-git submodule update --remote fedora-shared   # or: cd fedora-shared && git pull
-git add fedora-shared
-git commit -m 'Bump fedora-shared: <what changed>'
+git submodule update --remote llamacpp-shared   # or: cd llamacpp-shared && git pull
+git add llamacpp-shared
+git commit -m 'Bump llamacpp-shared: <what changed>'
 git push --recurse-submodules=on-demand
 ```
 

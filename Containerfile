@@ -2,7 +2,18 @@
 ARG FEDORA_VERSION=44
 ARG ROCM_VERSION=10.0.0
 ARG REPO=https://github.com/ggml-org/llama.cpp.git
+# Pinned to the llama.cpp git TAG inside the current image (see TAGS:
+# v0.6.0 -> tag v0.6.0-rocm-10.0.0). `make build` always passes TAG
+# explicitly; this default keeps manual `podman build` reproducible too.
+# Bump via `make new-build TAG=<v-or-b-tag>`.
+# TAG is a llama.cpp release tag (vX.Y.Z) or a nightly tag (bXXXXX); it is
+# checked out after clone (all refs are fetched first, so a tag is always
+# resolvable — unlike `clone -b <sha>`, which treats the ref as a branch).
 ARG TAG=v0.6.0
+# The GPU target is hardcoded to gfx1151 (AMD Strix Halo / Ryzen AI Max+ 395) —
+# this repository builds ONLY for gfx1151, so it is not a build arg.
+# AMD's ROCm pip-wheel index (PEP 503). ROCm is installed with pip instead of
+# the repo.radeon.com RPMs — see https://rocm.docs.amd.com (Install > pip).
 ARG ROCM_PIP_INDEX=https://stable.repo.amd.com/rocm/whl-next/
 
 # --- BUILDER STAGE ---
@@ -36,6 +47,13 @@ RUN python3 -m venv /opt/rocm-venv && \
         --index-url ${ROCM_PIP_INDEX} \
         "rocm[libraries,devel,device-gfx1151]==${ROCM_VERSION}"
 
+# The wheels unpack a classic /opt/rocm-style tree under the venv
+# (lib64 on Fedora):
+#   site-packages/_rocm_sdk_devel      SDK root: bin/, include/, lib/, lib/llvm/, lib/cmake/
+#   site-packages/_rocm_sdk_core       runtime libraries (HIP, HSA, comgr, SMI, ...)
+#   site-packages/_rocm_sdk_libraries  rocBLAS/hipBLAS/... + <gfx> prebuilt kernels
+# `rocm-sdk path --root` lazily expands the devel payload on first use and
+# prints the SDK root; remember it in a file + a sourceable env file.
 RUN /opt/rocm-venv/bin/rocm-sdk path --root > /opt/.rocm-dev-root && \
     DEV=$(cat /opt/.rocm-dev-root) && \
     printf '%s\n' \
@@ -116,7 +134,9 @@ RUN microdnf -y install bash ca-certificates libstdc++ libgomp libdrm procps-ng 
 
 # Copy artifacts
 COPY --from=builder /opt/rocm-rt/ /opt/rocm-${ROCM_VERSION}/
+# amdgpu.ids at the classic system path (fallback the HIP runtime searches)
 COPY --from=builder /opt/rocm-rt/share/libdrm/amdgpu.ids /usr/share/libdrm/amdgpu.ids
+# llama.cpp shared libraries (cmake --install stage dir)
 COPY --from=builder /usr/local/lib64/ /usr/local/lib64/
 COPY --from=builder /opt/llama.cpp/build/bin/llama /usr/local/bin/
 COPY --from=builder /opt/llama.cpp/build/bin/llama-server /usr/local/bin/
