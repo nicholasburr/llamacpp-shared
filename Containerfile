@@ -1,6 +1,6 @@
 # Global Arguments
 ARG FEDORA_VERSION=44
-ARG ROCM_VERSION=10.0.0
+ARG ROCM_VERSION=10.1.0
 ARG REPO=https://github.com/ggml-org/llama.cpp.git
 # Pinned to the llama.cpp git TAG inside the current image (see TAGS:
 # v0.6.0 -> tag v0.6.0-rocm-10.0.0). `make build` always passes TAG
