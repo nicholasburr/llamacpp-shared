@@ -3,9 +3,9 @@ ARG FEDORA_VERSION=44
 ARG ROCM_VERSION=10.1.0
 ARG REPO=https://github.com/ggml-org/llama.cpp.git
 # Pinned to the llama.cpp git TAG inside the current image (see TAGS:
-# v0.6.0 -> tag v0.6.0-rocm-10.0.0). `make build` always passes TAG
+# v0.6.0 -> tag v0.6.0-rocm-10.1.0). `make build` always passes TAG
 # explicitly; this default keeps manual `podman build` reproducible too.
-# Bump via `make new-build TAG=<v-or-b-tag>`.
+# Bump via `make parametric-build TAG=<v-or-b-tag>`.
 # TAG is a llama.cpp release tag (vX.Y.Z) or a nightly tag (bXXXXX); it is
 # checked out after clone (all refs are fetched first, so a tag is always
 # resolvable — unlike `clone -b <sha>`, which treats the ref as a branch).

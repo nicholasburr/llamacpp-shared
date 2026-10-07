@@ -1,0 +1,26 @@
+# llamacpp-shared — single source of truth for the shared image build.
+#
+# The image tag is computed by the Makefile (never hand-typed):
+#
+#     IMAGE_TAG = <LLAMA_TAG>-rocm-<ROCM_VERSION>
+#
+# e.g. v0.6.0-rocm-10.1.0
+#
+# LLAMA_TAG is the llama.cpp git tag the image is built from — by default
+# an official release tag (vX.Y.Z, from github.com/ggml-org/llama.cpp/
+# releases); a nightly (bXXXXX) may be pinned for a one-off build via
+# `make parametric-build TAG=<tag>`.
+#
+# Workflow for a new llama.cpp build:
+#     make parametric-build TAG=<v-or-b-tag>
+#     make build && make sync
+#
+# `make sync` tags HEAD with the image tag so consumers can pin the
+# submodule to a tagged build. Consumer projects keep their OWN TAGS
+# (per-project IMAGE_NAME, MODEL, versions) — this file only describes
+# the shared image built by the Containerfile, which runs no model.
+
+IMAGE_NAME=localhost/llamacpp
+LLAMA_TAG=v0.6.0
+ROCM_VERSION=10.1.0
+FEDORA_VERSION=44
