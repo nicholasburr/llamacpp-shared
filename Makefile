@@ -21,6 +21,7 @@
 #      make status     show container state
 #      make logs       follow container logs
 #      make stop       stop the service
+#      make clean      stop the service; remove the container and the built image
 #
 #  Maintainer targets (this repo and consumers):
 #      make build             build the active TAGS image
@@ -70,7 +71,7 @@ HAS_SERVICE := $(shell systemctl --user cat "$(CONTAINER_NAME).service" >/dev/nu
 
 LLAMA_REPO := https://github.com/ggml-org/llama.cpp.git
 
-.PHONY: help deploy status logs stop sync build parametric-build
+.PHONY: help deploy status logs stop clean sync build parametric-build
 
 help: ## Print this list.
 	@echo "image:     $(TAGGED_IMAGE)"
@@ -132,6 +133,35 @@ ifeq ($(HAS_SERVICE),yes)
 else
 	@echo "no systemd service '$(CONTAINER_NAME).service' in this repo — nothing to stop"
 endif
+
+clean: ## Stop the service; remove the container and the built image.
+	@echo "cleaning up $(CONTAINER_NAME) ..."
+	@if [ -n "$(HAS_SERVICE)" ]; then \
+		echo "  stopping + disabling systemd services"; \
+		systemctl --user stop $(CONTAINER_NAME)-build.service $(CONTAINER_NAME).service 2>/dev/null || true; \
+		systemctl --user disable $(CONTAINER_NAME)-build.service $(CONTAINER_NAME).service 2>/dev/null || true; \
+	fi
+	@if [ -d "$$HOME/.config/containers/systemd/$(CONTAINER_NAME)" ]; then \
+		echo "  removing installed quadlet units"; \
+		rm -rf "$$HOME/.config/containers/systemd/$(CONTAINER_NAME)"; \
+		systemctl --user daemon-reload 2>/dev/null || true; \
+	elif [ -z "$(HAS_SERVICE)" ]; then \
+		echo "  no systemd service '$(CONTAINER_NAME).service' in this repo — skipping"; \
+	fi
+	@if podman ps -a --format '{{.Names}}' 2>/dev/null | grep -qx "$(CONTAINER_NAME)"; then \
+		echo "  removing container $(CONTAINER_NAME)"; \
+		podman rm -f $(CONTAINER_NAME); \
+	else \
+		echo "  no container '$(CONTAINER_NAME)' to remove"; \
+	fi
+	@if podman image inspect "$(TAGGED_IMAGE)" >/dev/null 2>&1; then \
+		echo "  removing image $(TAGGED_IMAGE)"; \
+		podman rmi $(TAGGED_IMAGE) || \
+			echo "  WARNING: could not remove $(TAGGED_IMAGE) (in use? check 'podman ps -a' and retry)"; \
+	else \
+		echo "  no image '$(TAGGED_IMAGE)' to remove"; \
+	fi
+	@echo "clean complete"
 
 sync: ## Rewrite image tag, build args and model ref; tag HEAD with the image tag.
 	@files=""; \
